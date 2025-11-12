@@ -8,11 +8,17 @@
 import SwiftUI
 import AVFoundation
 
+/// Main metronome UI driving tempo control, animation, and audio feedback.
 struct ContentView: View {
+    /// Current tempo. Stored as Double for slider precision, displayed as Int.
     @State private var bpm: Double = 120
+    /// Toggles play/pause button visuals and disables inputs while running.
     @State private var isPlaying = false
+    /// Drives the circle pulse animation on every beat.
     @State private var beatPulse = false
+    /// Timer firing at the configured BPM interval.
     @State private var timer: Timer?
+    /// Pre-rendered click audio reused per beat for accuracy.
     @State private var audioPlayer: AVAudioPlayer?
 
     var body: some View {
@@ -23,6 +29,7 @@ struct ContentView: View {
                         .frame(height: 40)
 
                     ZStack {
+                        // Animated circle mirrors a physical metronome light pulse.
                         Circle()
                             .fill(isPlaying ? Color.blue : Color.gray.opacity(0.3))
                             .frame(width: 200, height: 200)
@@ -35,6 +42,7 @@ struct ContentView: View {
                     }
 
                     VStack(spacing: 12) {
+                        // Tempo readout stays large and centered for quick reference.
                         Text("\(Int(bpm))")
                             .font(.system(size: 72, weight: .bold, design: .rounded))
                             .foregroundStyle(.primary)
@@ -45,6 +53,7 @@ struct ContentView: View {
                     }
 
                     VStack(spacing: 20) {
+                        // Slider changes tempo only when the metronome is idle.
                         Slider(value: $bpm, in: 40...240, step: 1) {
                             Text("Tempo")
                         } minimumValueLabel: {
@@ -58,6 +67,7 @@ struct ContentView: View {
 
                         HStack(spacing: 20) {
                             Button {
+                                // Quick tap nudge to slow down tempo.
                                 if bpm > 40 {
                                     bpm -= 5
                                 }
@@ -92,6 +102,7 @@ struct ContentView: View {
                             .sensoryFeedback(.impact(weight: .medium), trigger: isPlaying)
 
                             Button {
+                                // Quick tap nudge to speed up tempo.
                                 if bpm < 240 {
                                     bpm += 5
                                 }
@@ -114,10 +125,12 @@ struct ContentView: View {
             .navigationTitle("Metronome")
         }
         .onAppear {
+            // Prepare audio session and click sample once when the view loads.
             setupAudio()
         }
     }
 
+    /// Configures the audio session and pre-generates a short click buffer.
     private func setupAudio() {
         do {
             try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default)
@@ -170,6 +183,7 @@ struct ContentView: View {
         }
     }
 
+    /// Starts the timer at the BPM interval and triggers the first click immediately.
     private func startMetronome() {
         playClick()
         beatPulse = true
@@ -184,12 +198,14 @@ struct ContentView: View {
         }
     }
 
+    /// Stops the timer and resets the pulse animation.
     private func stopMetronome() {
         timer?.invalidate()
         timer = nil
         beatPulse = false
     }
 
+    /// Rewinds the preloaded click so latency stays low on every beat.
     private func playClick() {
         audioPlayer?.currentTime = 0
         audioPlayer?.play()

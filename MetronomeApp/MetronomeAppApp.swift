@@ -11,6 +11,7 @@ import SwiftUI
 struct MetronomeApp: App {
     var body: some Scene {
         WindowGroup {
+            // App launches straight into the metronome controls.
             ContentView()
         }
     }
